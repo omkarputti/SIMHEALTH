@@ -32,7 +32,7 @@ This is a **React + Vite + TailwindCSS** web application prototype for **AI-powe
 1. **Unzip / Clone Repo**
 
    ```bash
-   git clone <your-repo-link>
+   git clone https://github.com/omkarputti/SIMHEALTH.git
    cd SIMHEALTH
    ```
 
@@ -59,13 +59,6 @@ This is a **React + Vite + TailwindCSS** web application prototype for **AI-powe
    ```
 
    - Local server: [http://localhost:5173](http://localhost:5173)
-
-6. **Build for Production (Optional)**
-
-   ```bash
-   npm run build
-   npm run preview
-   ```
 
 ---
 
@@ -99,4 +92,4 @@ This is a **React + Vite + TailwindCSS** web application prototype for **AI-powe
 
 ## 👩‍⚕️👨‍⚕️ Credits
 
-- Team SIMHEALTH – Hackathon Prototype
+- Team MediCrafters --
