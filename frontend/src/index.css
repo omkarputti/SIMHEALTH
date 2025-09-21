@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* SIMHEALTH Medical Theme Design System */
+/* SIMHEALTH Medical Theme Design System - Enhanced */
 
 @layer base {
   :root {
@@ -16,15 +16,17 @@
     --popover: 0 0% 100%;
     --popover-foreground: 215 25% 27%;
 
-    /* Medical blue primary palette */
+    /* Enhanced medical blue primary palette */
     --primary: 213 94% 68%;
     --primary-foreground: 0 0% 100%;
     --primary-soft: 213 100% 95%;
+    --primary-dark: 213 94% 45%;
 
-    /* Medical green accent palette */
+    /* Enhanced medical green accent palette */
     --medical-green: 142 69% 58%;
     --medical-green-foreground: 0 0% 100%;
     --medical-green-soft: 142 69% 95%;
+    --medical-green-dark: 142 69% 35%;
 
     /* Status colors for health indicators */
     --health-good: 142 69% 58%;
@@ -49,19 +51,25 @@
 
     --radius: 0.75rem;
 
-    /* Medical gradients */
+    /* Enhanced medical gradients */
     --gradient-primary: linear-gradient(135deg, hsl(213 94% 68%), hsl(213 94% 78%));
     --gradient-medical: linear-gradient(135deg, hsl(213 94% 68%), hsl(142 69% 58%));
     --gradient-hero: linear-gradient(135deg, hsl(213 100% 97%), hsl(142 69% 95%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(213 100% 98%));
+    --gradient-glass: linear-gradient(145deg, hsl(0 0% 100% / 0.8), hsl(213 100% 98% / 0.6));
+    --gradient-aurora: linear-gradient(45deg, hsl(213 94% 68%), hsl(142 69% 58%), hsl(280 100% 70%), hsl(213 94% 68%));
     
-    /* Shadows for medical cards */
-    --shadow-card: 0 4px 6px -1px hsl(213 94% 68% / 0.1);
-    --shadow-card-hover: 0 10px 25px -3px hsl(213 94% 68% / 0.15);
-    --shadow-floating: 0 20px 25px -5px hsl(213 94% 68% / 0.1), 0 10px 10px -5px hsl(213 94% 68% / 0.04);
+    /* Enhanced shadows for medical cards */
+    --shadow-card: 0 4px 6px -1px hsl(213 94% 68% / 0.1), 0 2px 4px -1px hsl(213 94% 68% / 0.06);
+    --shadow-card-hover: 0 20px 25px -5px hsl(213 94% 68% / 0.1), 0 10px 10px -5px hsl(213 94% 68% / 0.04);
+    --shadow-floating: 0 25px 50px -12px hsl(213 94% 68% / 0.25);
+    --shadow-glow: 0 0 20px hsl(213 94% 68% / 0.3);
+    --shadow-inner: inset 0 2px 4px 0 hsl(213 94% 68% / 0.06);
 
     /* Animation transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --transition-spring: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 
     --sidebar-background: 0 0% 98%;
 
@@ -130,48 +138,146 @@
 }
 
 @layer components {
-  /* Medical UI Components */
+  /* Enhanced Medical UI Components */
   .medical-card {
-    @apply bg-card shadow-[var(--shadow-card)] rounded-[var(--radius)] border border-border p-6 transition-[var(--transition-smooth)] hover:shadow-[var(--shadow-card-hover)];
+    @apply bg-card shadow-[var(--shadow-card)] rounded-[var(--radius)] border border-border p-6 transition-[var(--transition-smooth)] hover:shadow-[var(--shadow-card-hover)] hover:scale-[1.02] backdrop-blur-sm;
+    background: var(--gradient-card);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .medical-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--gradient-medical);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .medical-card:hover::before {
+    opacity: 1;
+  }
+
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-[var(--shadow-floating)] rounded-[var(--radius)] p-6 transition-[var(--transition-smooth)] hover:bg-white/90 hover:shadow-[var(--shadow-glow)];
+  }
+
+  .aurora-card {
+    background: var(--gradient-aurora);
+    background-size: 400% 400%;
+    animation: aurora 8s ease-in-out infinite;
+    @apply rounded-[var(--radius)] p-6 text-white shadow-[var(--shadow-floating)];
   }
   
   .health-status-good {
-    @apply bg-[hsl(var(--health-good))] text-[hsl(var(--medical-green-foreground))];
+    @apply bg-[hsl(var(--health-good))] text-[hsl(var(--medical-green-foreground))] shadow-lg;
+    box-shadow: 0 4px 14px 0 hsl(var(--health-good) / 0.3);
   }
   
   .health-status-warning {
-    @apply bg-[hsl(var(--health-warning))] text-white;
+    @apply bg-[hsl(var(--health-warning))] text-white shadow-lg;
+    box-shadow: 0 4px 14px 0 hsl(var(--health-warning) / 0.3);
   }
   
   .health-status-critical {
-    @apply bg-[hsl(var(--health-critical))] text-white;
+    @apply bg-[hsl(var(--health-critical))] text-white shadow-lg;
+    box-shadow: 0 4px 14px 0 hsl(var(--health-critical) / 0.3);
   }
 
   .gradient-hero {
     background: var(--gradient-hero);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .gradient-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 20% 80%, hsl(213 94% 68% / 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, hsl(142 69% 58% / 0.1) 0%, transparent 50%);
+    pointer-events: none;
   }
   
   .gradient-medical {
     background: var(--gradient-medical);
   }
 
+  .gradient-glass {
+    background: var(--gradient-glass);
+    backdrop-filter: blur(10px);
+  }
+
+  .btn-glow {
+    @apply relative overflow-hidden;
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+  }
+
+  .btn-glow::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+  }
+
+  .btn-glow:hover::before {
+    left: 100%;
+  }
+
   .animate-fade-in {
-    animation: fadeIn 0.6s ease-out forwards;
+    animation: fadeIn 0.8s ease-out forwards;
   }
 
   .animate-slide-up {
-    animation: slideUp 0.8s ease-out forwards;
+    animation: slideUp 1s ease-out forwards;
   }
 
   .animate-float {
     animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+
+  .animate-bounce-gentle {
+    animation: bounceGentle 2s ease-in-out infinite;
+  }
+
+  .animate-gradient {
+    background-size: 400% 400%;
+    animation: gradientShift 3s ease infinite;
+  }
+
+  .text-gradient {
+    background: var(--gradient-medical);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .border-gradient {
+    border: 2px solid transparent;
+    background: linear-gradient(white, white) padding-box,
+                var(--gradient-medical) border-box;
   }
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px);
   }
   to {
     opacity: 1;
@@ -182,7 +288,7 @@
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(40px);
   }
   to {
     opacity: 1;
@@ -195,6 +301,72 @@
     transform: translateY(0px);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px hsl(var(--primary) / 0.6);
+  }
+}
+
+@keyframes bounceGentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes aurora {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(1);
+  }
+  75% {
+    transform: scale(1.05);
   }
 }
