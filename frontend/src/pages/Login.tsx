@@ -9,17 +9,50 @@ import { Link, useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [role, setRole] = useState<"patient" | "doctor">("patient");
+  const [loginData, setLoginData] = useState({
+    email: "",
+    password: "",
+    phone: "",
+    otp: ""
+  });
   const navigate = useNavigate();
 
+  const handleInputChange = (field: string, value: string) => {
+    setLoginData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const handleLogin = () => {
-    if (role === "doctor") {
-      navigate("/doctor-dashboard");
+    // Basic validation
+    if (loginData.email && loginData.password) {
+      // Store user data in localStorage for demo
+      localStorage.setItem('user', JSON.stringify({
+        role,
+        email: loginData.email,
+        name: loginData.email.split('@')[0] // Extract name from email
+      }));
+      
+      if (role === "doctor") {
+        navigate("/doctor-dashboard");
+      } else {
+        navigate("/patient-dashboard");
+      }
     } else {
-      navigate("/patient-dashboard");
+      alert("Please fill in all required fields");
     }
   };
 
   const handleGuestLogin = () => {
+    // Store guest data in localStorage
+    localStorage.setItem('user', JSON.stringify({
+      role,
+      email: "guest@demo.com",
+      name: "Demo User",
+      isGuest: true
+    }));
+    
     if (role === "doctor") {
       navigate("/doctor-dashboard");
     } else {
@@ -84,12 +117,20 @@ const Login = () => {
                       type="email"
                       placeholder="your.email@example.com"
                       className="pl-10"
+                      value={loginData.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" type="password" placeholder="••••••••" />
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    placeholder="••••••••"
+                    value={loginData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                  />
                 </div>
               </TabsContent>
               
@@ -103,12 +144,20 @@ const Login = () => {
                       type="tel"
                       placeholder="+91 98765 43210"
                       className="pl-10"
+                      value={loginData.phone}
+                      onChange={(e) => handleInputChange('phone', e.target.value)}
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="otp">OTP</Label>
-                  <Input id="otp" type="text" placeholder="123456" />
+                  <Input 
+                    id="otp" 
+                    type="text" 
+                    placeholder="123456"
+                    value={loginData.otp}
+                    onChange={(e) => handleInputChange('otp', e.target.value)}
+                  />
                 </div>
               </TabsContent>
             </Tabs>

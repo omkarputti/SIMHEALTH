@@ -272,6 +272,215 @@
     background: linear-gradient(white, white) padding-box,
                 var(--gradient-medical) border-box;
   }
+
+  /* Enhanced Hover Animations */
+  .hover-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hover-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.05), hsl(var(--medical-green) / 0.05));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+  }
+
+  .hover-card:hover::before {
+    opacity: 1;
+  }
+
+  .hover-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px hsl(var(--primary) / 0.15);
+    border-color: hsl(var(--primary) / 0.3);
+  }
+
+  .hover-card > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Medical Card Hover Effects */
+  .medical-card-hover {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .medical-card-hover::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.1), transparent);
+    transition: left 0.6s ease;
+    z-index: 1;
+  }
+
+  .medical-card-hover:hover::after {
+    left: 100%;
+  }
+
+  .medical-card-hover:hover {
+    background: linear-gradient(145deg, hsl(var(--card)), hsl(var(--primary) / 0.02));
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 25px 50px hsl(var(--primary) / 0.2);
+    border-color: hsl(var(--primary) / 0.4);
+  }
+
+  .medical-card-hover > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Glass Card Hover */
+  .glass-card-hover {
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.8);
+  }
+
+  .glass-card-hover:hover {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(15px);
+    transform: translateY(-8px);
+    box-shadow: 0 30px 60px hsl(var(--primary) / 0.25);
+    border-color: hsl(var(--primary) / 0.5);
+  }
+
+  /* Feature Card Hover */
+  .feature-card-hover {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .feature-card-hover::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--gradient-medical);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    z-index: 1;
+  }
+
+  .feature-card-hover:hover::before {
+    opacity: 0.05;
+  }
+
+  .feature-card-hover:hover {
+    transform: translateY(-10px) rotate(1deg);
+    box-shadow: 0 35px 70px hsl(var(--primary) / 0.3);
+    border-color: hsl(var(--primary) / 0.6);
+  }
+
+  .feature-card-hover > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Icon Hover Effects */
+  .icon-hover {
+    transition: all 0.3s ease;
+  }
+
+  .icon-hover:hover {
+    transform: scale(1.1) rotate(5deg);
+    filter: drop-shadow(0 10px 20px hsl(var(--primary) / 0.3));
+  }
+
+  /* Button Hover Enhancements */
+  .btn-hover-glow {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-hover-glow::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .btn-hover-glow:hover::before {
+    left: 100%;
+  }
+
+  .btn-hover-glow:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px hsl(var(--primary) / 0.4);
+  }
+
+  /* Status Card Hover */
+  .status-card-hover {
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .status-card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px hsl(var(--primary) / 0.2);
+  }
+
+  .status-card-hover:hover .status-icon {
+    transform: scale(1.15);
+    filter: brightness(1.2);
+  }
+
+  .status-icon {
+    transition: all 0.3s ease;
+  }
+
+  /* Pulse Effect on Hover */
+  .hover-pulse:hover {
+    animation: pulseGlow 1s ease-in-out infinite;
+  }
+
+  /* Gradient Border on Hover */
+  .hover-gradient-border {
+    position: relative;
+    transition: all 0.3s ease;
+  }
+
+  .hover-gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 2px;
+    background: var(--gradient-medical);
+    border-radius: inherit;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .hover-gradient-border:hover::before {
+    opacity: 1;
+  }
+
+  .hover-gradient-border:hover {
+    transform: translateY(-3px);
+  }
 }
 
 @keyframes fadeIn {
@@ -368,5 +577,14 @@
   }
   75% {
     transform: scale(1.05);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px hsl(var(--primary) / 0.6);
   }
 }

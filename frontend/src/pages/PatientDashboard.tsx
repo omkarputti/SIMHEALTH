@@ -24,7 +24,8 @@ import Navbar from "@/components/Navbar";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 const PatientDashboard = () => {
-  const [isFirstTime, setIsFirstTime] = useState(true); // This would come from auth context
+  const [user, setUser] = useState<any>(null);
+  const [isFirstTime, setIsFirstTime] = useState(true);
   const [showForm, setShowForm] = useState(true);
   const [personalDetails, setPersonalDetails] = useState({
     fullName: "",
@@ -34,6 +35,27 @@ const PatientDashboard = () => {
     sex: "",
     emergencyContact: ""
   });
+
+  useEffect(() => {
+    // Get user data from localStorage
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const parsedUser = JSON.parse(userData);
+      setUser(parsedUser);
+      
+      // If user has a name, they're not first time
+      if (parsedUser.name && parsedUser.name !== "Demo User") {
+        setIsFirstTime(false);
+        setShowForm(false);
+        // Pre-fill form with user data
+        setPersonalDetails(prev => ({
+          ...prev,
+          fullName: parsedUser.name || "",
+          contact: parsedUser.email || ""
+        }));
+      }
+    }
+  }, []);
 
   // Mock previous results data
   const healthHistory = [
@@ -71,6 +93,14 @@ const PatientDashboard = () => {
 
   const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Save personal details to localStorage
+    const updatedUser = {
+      ...user,
+      personalDetails: personalDetails,
+      profileCompleted: true
+    };
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    setUser(updatedUser);
     setShowForm(false);
     setIsFirstTime(false);
     // Save details to backend
@@ -182,11 +212,11 @@ const PatientDashboard = () => {
           <h3 className="text-xl font-semibold mb-4">Current Health Status</h3>
           <div className="grid md:grid-cols-3 gap-6">
             {currentHealthStatus.map((item, index) => (
-              <Card key={index} className="medical-card animate-slide-up" style={{animationDelay: `${index * 0.1}s`}}>
+              <Card key={index} className="status-card-hover animate-slide-up" style={{animationDelay: `${index * 0.1}s`}}>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center status-icon ${
                         item.status === "good" ? "bg-health-good" :
                         item.status === "warning" ? "bg-health-warning" : "bg-health-critical"
                       }`}>
@@ -260,16 +290,16 @@ const PatientDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-3 gap-4">
-            <Button variant="outline" className="h-24 flex flex-col space-y-2">
-              <Camera className="h-8 w-8" />
+            <Button variant="outline" className="h-24 flex flex-col space-y-2 hover-card hover-gradient-border">
+              <Camera className="h-8 w-8 icon-hover" />
               <span>Medical Image</span>
             </Button>
-            <Button variant="outline" className="h-24 flex flex-col space-y-2">
-              <Mic className="h-8 w-8" />
+            <Button variant="outline" className="h-24 flex flex-col space-y-2 hover-card hover-gradient-border">
+              <Mic className="h-8 w-8 icon-hover" />
               <span>Audio Recording</span>
             </Button>
-            <Button variant="outline" className="h-24 flex flex-col space-y-2">
-              <Activity className="h-8 w-8" />
+            <Button variant="outline" className="h-24 flex flex-col space-y-2 hover-card hover-gradient-border">
+              <Activity className="h-8 w-8 icon-hover" />
               <span>Vital Signs</span>
             </Button>
           </div>
@@ -319,15 +349,31 @@ const PatientDashboard = () => {
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">Patient Dashboard</h1>
+            <h1 className="text-3xl font-bold text-gradient">
+              Welcome back, {user?.name || "Patient"}!
+            </h1>
             <p className="text-muted-foreground">
-              Monitor your health insights and receive personalized recommendations
+              {isFirstTime ? "Complete your profile to get started" : "Monitor your health insights and receive personalized recommendations"}
             </p>
           </div>
-          <Badge variant="default" className="flex items-center space-x-1">
-            <User className="h-4 w-4" />
-            <span>Patient</span>
-          </Badge>
+          <div className="flex items-center space-x-4">
+            <Badge variant="default" className="flex items-center space-x-1">
+              <User className="h-4 w-4" />
+              <span>{user?.role === "doctor" ? "Doctor" : "Patient"}</span>
+            </Badge>
+            {!isFirstTime && (
+              <>
+                <Button variant="outline" size="sm" className="btn-hover-glow">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Report
+                </Button>
+                <Button variant="outline" size="sm" className="btn-hover-glow">
+                  <History className="h-4 w-4 mr-2" />
+                  View History
+                </Button>
+              </>
+            )}
+          </div>
         </div>
 
         {isFirstTime && showForm ? <PersonalDetailsForm /> : <PatientDashboardContent />}

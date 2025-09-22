@@ -37,7 +37,7 @@ const Navbar = () => {
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
             </Link>
             <Link to="/login">
-              <Button className="btn-glow hover:scale-105 transition-all duration-300">
+              <Button className="btn-hover-glow hover:scale-105 transition-all duration-300">
                 Get Started
               </Button>
             </Link>
@@ -87,7 +87,7 @@ const Navbar = () => {
                 Help
               </Link>
               <Link to="/login" onClick={() => setIsOpen(false)}>
-                <Button className="w-full btn-glow">
+                <Button className="w-full btn-hover-glow">
                   Get Started
                 </Button>
               </Link>

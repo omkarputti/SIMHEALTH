@@ -30,11 +30,11 @@ const Landing = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12">
             <Link to="/login">
-              <Button size="lg" className="text-lg px-10 py-6 gradient-medical text-white border-0 hover:shadow-[var(--shadow-floating)] btn-glow animate-bounce-gentle">
+              <Button size="lg" className="text-lg px-10 py-6 gradient-medical text-white border-0 hover:shadow-[var(--shadow-floating)] btn-hover-glow animate-bounce-gentle">
                 Try Prototype <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Button variant="outline" size="lg" className="text-lg px-10 py-6 border-gradient hover:bg-primary/5 transition-all duration-300">
+            <Button variant="outline" size="lg" className="text-lg px-10 py-6 border-gradient hover:bg-primary/5 transition-all duration-300 btn-hover-glow">
               Watch Demo
             </Button>
           </div>
@@ -77,9 +77,9 @@ const Landing = () => {
               }
             ].map((step, index) => (
               <div key={index} className="relative group">
-                <Card className="glass-card text-center animate-slide-up hover:scale-105 transition-all duration-500" style={{animationDelay: `${index * 0.2}s`}}>
+                <Card className="glass-card-hover text-center animate-slide-up" style={{animationDelay: `${index * 0.2}s`}}>
                   <CardContent className="p-8">
-                    <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 relative overflow-hidden ${
+                    <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 relative overflow-hidden icon-hover ${
                       step.color === 'primary' ? 'bg-gradient-to-br from-primary to-primary-dark' : 'bg-gradient-to-br from-medical-green to-medical-green-dark'
                     }`}>
                       <step.icon className="h-10 w-10 text-white animate-bounce-gentle" />
@@ -178,9 +178,9 @@ const Landing = () => {
               }
             ].map((feature, index) => (
               <div key={index} className="group">
-                <Card className="medical-card text-center hover:scale-105 transition-all duration-500 relative overflow-hidden">
+                <Card className="feature-card-hover text-center relative overflow-hidden">
                   <CardContent className="p-8 relative z-10">
-                    <div className={`w-20 h-20 bg-gradient-to-br ${feature.gradient} rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg animate-pulse-glow`}>
+                    <div className={`w-20 h-20 bg-gradient-to-br ${feature.gradient} rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg animate-pulse-glow icon-hover`}>
                       <feature.icon className="h-10 w-10 text-white animate-bounce-gentle" />
                     </div>
                     <h3 className="text-xl font-semibold mb-4 text-gradient">{feature.title}</h3>
