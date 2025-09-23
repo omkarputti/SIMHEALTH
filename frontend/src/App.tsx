@@ -7,12 +7,14 @@ import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import PatientDashboard from "./pages/PatientDashboard";
 import DoctorDashboard from "./pages/DoctorDashboard";
+import { RequireDoctor } from "./components/RequireRole";
 import Report from "./pages/Report";
 import DigitalTwin from "./pages/DigitalTwin";
 import Research from "./pages/Research";
 import Contact from "./pages/Contact";
 import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
+import Register from "./pages/Register";
 
 const queryClient = new QueryClient();
 
@@ -25,8 +27,9 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/patient-dashboard" element={<PatientDashboard />} />
-          <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
+          <Route path="/doctor-dashboard" element={<RequireDoctor><DoctorDashboard /></RequireDoctor>} />
           <Route path="/report" element={<Report />} />
           <Route path="/digital-twin" element={<DigitalTwin />} />
           <Route path="/research" element={<Research />} />

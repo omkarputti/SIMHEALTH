@@ -1,4 +1,8 @@
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { auth, db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +24,38 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 const DoctorDashboard = () => {
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+      const snap = await getDoc(doc(db, 'doctors', user.uid));
+      if (!snap.exists()) {
+        navigate('/patient-dashboard');
+      }
+    });
+    return () => unsub();
+  }, [navigate]);
+  const testProtectedApi = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('idToken');
+      if (!token) {
+        alert('No ID token found. Please sign in first.');
+        return;
+      }
+      const baseUrl = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:4000';
+      const res = await fetch(`${baseUrl}/api/protected`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      alert(`API OK: ${JSON.stringify(data)}`);
+    } catch (err: any) {
+      alert(`API Error: ${err?.message || 'Unknown error'}`);
+    }
+  }, []);
   
   const healthData = [
     { name: "Jan", heart: 85, lungs: 92, skin: 88 },
@@ -227,6 +263,7 @@ const DoctorDashboard = () => {
             <Stethoscope className="h-4 w-4" />
             <span>Doctor</span>
           </Badge>
+          <Button size="sm" onClick={testProtectedApi}>Test API</Button>
         </div>
 
         {selectedPatient ? (

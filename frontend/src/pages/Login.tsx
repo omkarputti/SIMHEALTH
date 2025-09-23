@@ -1,4 +1,8 @@
 import { useState } from "react";
+import { auth } from "@/lib/firebase";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signInWithRedirect } from "firebase/auth";
+import { db } from "@/lib/firebase";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,41 +28,107 @@ const Login = () => {
     }));
   };
 
-  const handleLogin = () => {
-    // Basic validation
-    if (loginData.email && loginData.password) {
-      // Store user data in localStorage for demo
-      localStorage.setItem('user', JSON.stringify({
-        role,
-        email: loginData.email,
-        name: loginData.email.split('@')[0] // Extract name from email
-      }));
-      
-      if (role === "doctor") {
-        navigate("/doctor-dashboard");
-      } else {
-        navigate("/patient-dashboard");
+  const handleLogin = async () => {
+    try {
+      if (!loginData.email || !loginData.password) {
+        return alert("Please fill in email and password");
       }
-    } else {
-      alert("Please fill in all required fields");
+      const cred = await signInWithEmailAndPassword(auth, loginData.email, loginData.password);
+      const idToken = await cred.user.getIdToken();
+      localStorage.setItem('idToken', idToken);
+      // Fetch role from Firestore
+      const docRef = doc(db, 'doctors', cred.user.uid);
+      const docSnap = await getDoc(docRef);
+      const isDoctor = docSnap.exists();
+      const resolvedRole = isDoctor ? 'doctor' : 'patient';
+      localStorage.setItem('user', JSON.stringify({
+        role: resolvedRole,
+        email: loginData.email,
+        name: loginData.email.split('@')[0]
+      }));
+      if (resolvedRole === 'doctor') {
+        navigate('/doctor-dashboard');
+      } else {
+        navigate('/patient-dashboard');
+      }
+    } catch (err: any) {
+      alert(err?.message || "Failed to sign in");
     }
   };
 
-  const handleGuestLogin = () => {
-    // Store guest data in localStorage
-    localStorage.setItem('user', JSON.stringify({
-      role,
-      email: "guest@demo.com",
-      name: "Demo User",
-      isGuest: true
-    }));
-    
-    if (role === "doctor") {
-      navigate("/doctor-dashboard");
-    } else {
-      navigate("/patient-dashboard");
+  const handleRegister = async () => {
+    try {
+      if (!loginData.email || !loginData.password) {
+        return alert("Please fill in email and password");
+      }
+      const cred = await createUserWithEmailAndPassword(auth, loginData.email, loginData.password);
+      const idToken = await cred.user.getIdToken();
+      localStorage.setItem('idToken', idToken);
+      await setDoc(doc(db, 'patients', cred.user.uid), {
+        uid: cred.user.uid,
+        role: 'patient',
+        name: loginData.email.split('@')[0],
+        email: loginData.email,
+        createdAt: serverTimestamp(),
+      }, { merge: true });
+      localStorage.setItem('user', JSON.stringify({ role: 'patient', email: loginData.email, name: loginData.email.split('@')[0] }));
+      navigate('/patient-dashboard');
+    } catch (err: any) {
+      alert(err?.message || "Failed to register");
     }
   };
+
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const handleGoogle = async () => {
+    if (googleLoading) return;
+    setGoogleLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      const cred = await signInWithPopup(auth, provider);
+      const user = cred.user;
+      const idToken = await user.getIdToken();
+      localStorage.setItem('idToken', idToken);
+      localStorage.setItem('user', JSON.stringify({
+        role,
+        email: user.email || "",
+        name: user.displayName || (user.email || '').split('@')[0]
+      }));
+
+      // Ensure profile exists and determine role
+      const doctorsRef = doc(db, 'doctors', user.uid);
+      const ref = doctorsRef;
+      const snap = await getDoc(ref);
+      if (!snap.exists()) {
+        // default to patient profile
+        await setDoc(doc(db, 'patients', user.uid), {
+          uid: user.uid,
+          role: 'patient',
+          name: user.displayName || "",
+          email: user.email || "",
+          createdAt: serverTimestamp(),
+          provider: 'google'
+        }, { merge: true });
+        navigate('/patient-dashboard');
+      } else {
+        navigate('/doctor-dashboard');
+      }
+    } catch (err: any) {
+      const code = err?.code || "";
+      if (code === 'auth/popup-blocked') {
+        const provider = new GoogleAuthProvider();
+        await signInWithRedirect(auth, provider);
+        return;
+      }
+      if (code !== 'auth/cancelled-popup-request') {
+        alert(err?.message || "Google sign-in failed");
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  // Guest login removed
 
   return (
     <div className="min-h-screen gradient-hero flex items-center justify-center px-4">
@@ -166,31 +236,19 @@ const Login = () => {
               <Button onClick={handleLogin} className="w-full">
                 Sign In as {role === "patient" ? "Patient" : "Doctor"}
               </Button>
-              
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">Or</span>
-                </div>
-              </div>
-              
-              <Button 
-                variant="outline" 
-                onClick={handleGuestLogin}
-                className="w-full"
-              >
-                Continue as Guest (Demo Mode)
+              <Button variant="outline" onClick={handleGoogle} disabled={googleLoading} className="w-full">
+                Continue with Google
               </Button>
+              
+              {/* Removed guest login and divider */}
             </div>
 
             <div className="mt-6 text-center space-y-2">
               <p className="text-sm text-muted-foreground">
                 Don't have an account?{" "}
-                <a href="#" className="text-primary hover:underline">
+                <Link to="/register" className="text-primary hover:underline">
                   Register here
-                </a>
+                </Link>
               </p>
               <p className="text-xs text-muted-foreground">
                 By continuing, you agree to our terms and privacy policy

@@ -22,6 +22,7 @@ import {
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useCallback } from "react";
 
 type PersonalDetails = {
   fullName: string;
@@ -390,6 +391,24 @@ const PatientDashboard = () => {
     // Save details to backend
   };
 
+  const testProtectedApi = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('idToken');
+      if (!token) {
+        alert('No ID token found. Please sign in first.');
+        return;
+      }
+      const baseUrl = (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:4000';
+      const res = await fetch(`${baseUrl}/api/protected`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      alert(`API OK: ${JSON.stringify(data)}`);
+    } catch (err: any) {
+      alert(`API Error: ${err?.message || 'Unknown error'}`);
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -419,6 +438,9 @@ const PatientDashboard = () => {
                   <History className="h-4 w-4 mr-2" />
                   View History
                 </Button>
+              <Button variant="default" size="sm" onClick={testProtectedApi}>
+                Test API
+              </Button>
               </>
             )}
           </div>
