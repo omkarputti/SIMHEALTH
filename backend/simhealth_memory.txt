@@ -1,0 +1,3 @@
+User: hi
+HelperBot: Hi there!  How can I help you today?
+
