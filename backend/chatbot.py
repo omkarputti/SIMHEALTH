@@ -1,12 +1,10 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import google.generativeai as genai
-from googletrans import Translator
 import os
 import difflib
 
 # ------------------- Setup -------------------
-translator = Translator()
 genai.configure(api_key="AIzaSyAGW6HrXWvqRp9zwRkFvpTKvXv9OGMJWx8")
 
 # ------------------- System Instruction -------------------
@@ -74,7 +72,6 @@ CORS(app)
 def chat_with_helper():
     data = request.get_json()
     user_input = data.get("message", "").strip()
-    reply_lang = data.get("lang", "en")
 
     if not user_input:
         return jsonify({"error": "Empty message"}), 400
@@ -85,21 +82,14 @@ def chat_with_helper():
     # Try fuzzy match with FAQ keys
     possible_matches = difflib.get_close_matches(user_lower, FAQS.keys(), n=1, cutoff=0.6)
     if possible_matches:
-        reply_en = FAQS[possible_matches[0]]
+        reply = FAQS[possible_matches[0]]
     elif any(word in user_lower for word in ["app", "simhealth", "report", "result", "upload", "dashboard"]):
         # If looks app-related but no FAQ match → give default guide
-        reply_en = DEFAULT_APP_GUIDE
+        reply = DEFAULT_APP_GUIDE
     else:
         # Otherwise → send to Gemini (health/general queries)
-        user_input_en = translator.translate(user_input, dest="en").text
-        response = chat.send_message(user_input_en)
-        reply_en = response.text.strip()
-
-    # Translate back if needed
-    if reply_lang != "en":
-        reply = translator.translate(reply_en, src="en", dest=reply_lang).text
-    else:
-        reply = reply_en
+        response = chat.send_message(user_input)
+        reply = response.text.strip()
 
     # Save memory
     with open(MEMORY_FILE, "a", encoding="utf-8") as f:
