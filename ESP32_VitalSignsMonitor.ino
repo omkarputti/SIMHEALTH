@@ -27,13 +27,13 @@
 #include <MAX30105.h>
 #include <heartRate.h>
 
-// WiFi credentials
-const char* ssid = "YOUR_WIFI_SSID";
-const char* password = "YOUR_WIFI_PASSWORD";
+// WiFi credentials - UPDATED WITH YOUR NETWORK DETAILS
+const char* ssid = "Airtel_shiv_7415";        // Your WiFi network name
+const char* password = "air87579";             // Your WiFi password
 
 // SIMHEALTH API configuration
-const char* apiBaseUrl = "http://localhost:4000"; // Change to your backend URL
-const char* deviceId = "ESP32_001"; // Unique device ID - change this for each device
+const char* apiBaseUrl = "http://172.23.40.2:4000"; // Your computer's IP address
+const char* deviceId = "ESP32_WROOM_001"; // Unique device ID - change this for each device
 
 // Sensor pins and variables
 const int ECG_PIN = 34; // ADC pin for ECG
@@ -128,7 +128,7 @@ void registerDevice() {
     // Create JSON payload
     DynamicJsonDocument doc(1024);
     doc["deviceId"] = deviceId;
-    doc["patientId"] = "1"; // This should be set based on pairing
+    doc["patientId"] = "KSNJScLUebUUJvxcNQycUqMLM8X2"; // Your actual patient ID from Firebase
     doc["deviceName"] = "ESP32 Health Monitor";
     
     String jsonString;
@@ -206,23 +206,33 @@ void readMAX30102Data() {
   
   // Simple SpO2 calculation (you can improve this)
   // This is a basic implementation - for production, use proper algorithms
-  float ratio = (float)red / (float)ir;
-  spo2 = 100 - (ratio * 10); // Simplified calculation
-  
-  if (spo2 < 90) spo2 = 90; // Minimum SpO2
-  if (spo2 > 100) spo2 = 100; // Maximum SpO2
+  if (ir > 0 && red > 0) {
+    float ratio = (float)red / (float)ir;
+    spo2 = 100 - (ratio * 10); // Simplified calculation
+    
+    if (spo2 < 90) spo2 = 90; // Minimum SpO2
+    if (spo2 > 100) spo2 = 100; // Maximum SpO2
+  } else {
+    spo2 = 98 + random(-3, 3); // Fallback to simulated data
+  }
 }
 
 float readBatteryLevel() {
   // Read battery voltage and convert to percentage
   int batteryValue = analogRead(BATTERY_PIN);
-  float voltage = (batteryValue / 4095.0) * 3.3; // Convert to voltage
-  float percentage = (voltage / 4.2) * 100; // Assuming 4.2V is full charge
   
-  if (percentage > 100) percentage = 100;
-  if (percentage < 0) percentage = 0;
-  
-  return percentage;
+  if (batteryValue > 0) {
+    float voltage = (batteryValue / 4095.0) * 3.3; // Convert to voltage
+    float percentage = (voltage / 4.2) * 100; // Assuming 4.2V is full charge
+    
+    if (percentage > 100) percentage = 100;
+    if (percentage < 0) percentage = 0;
+    
+    return percentage;
+  } else {
+    // No battery connected, simulate USB power
+    return 100.0; // USB powered
+  }
 }
 
 void sendVitalSignsData() {

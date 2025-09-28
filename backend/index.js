@@ -4,14 +4,18 @@ const cors = require('cors');
 const admin = require('firebase-admin');
 
 // Initialize Firebase Admin SDK
-// Prefer GOOGLE_APPLICATION_CREDENTIALS or Workload Identity; falls back to default
+// Using project ID for development - in production, use service account key
 if (!admin.apps.length) {
   try {
     admin.initializeApp({
-      credential: admin.credential.applicationDefault(),
+      projectId: 'simhealth-842b1',
+      // For development, we'll use the default credentials
+      // In production, you should use a service account key file
     });
   } catch (error) {
     console.error('Failed to initialize Firebase Admin. Ensure credentials are configured.', error);
+    console.log('Note: For development, make sure you have Firebase CLI installed and authenticated');
+    console.log('Run: firebase login && firebase use simhealth-842b1');
     process.exit(1);
   }
 }
@@ -56,7 +60,10 @@ app.get('/api/protected', verifyFirebaseIdToken, (req, res) => {
 // ESP32 Device Management
 const db = admin.firestore();
 
-// ESP32 device registration endpoint
+// In-memory storage for device status (for development)
+const deviceStatus = new Map();
+
+// ESP32 device registration endpoint (simplified for development)
 app.post('/api/esp32/register', async (req, res) => {
   try {
     const { deviceId, patientId, deviceName } = req.body;
@@ -65,30 +72,20 @@ app.post('/api/esp32/register', async (req, res) => {
       return res.status(400).json({ error: 'Device ID and Patient ID are required' });
     }
 
-    // Check if patient exists
-    const patientRef = db.collection('patients').doc(patientId);
-    const patientDoc = await patientRef.get();
-    
-    if (!patientDoc.exists) {
-      return res.status(404).json({ error: 'Patient not found' });
-    }
-
-    // Register ESP32 device
-    const deviceRef = db.collection('esp32_devices').doc(deviceId);
-    await deviceRef.set({
+    // Store device registration in memory
+    const deviceInfo = {
       deviceId,
       patientId,
       deviceName: deviceName || `ESP32-${deviceId}`,
-      registeredAt: admin.firestore.FieldValue.serverTimestamp(),
+      registeredAt: new Date().toISOString(),
       isActive: true,
-      lastSeen: admin.firestore.FieldValue.serverTimestamp()
-    });
-
-    // Update patient record with device info
-    await patientRef.update({
-      esp32DeviceId: deviceId,
-      hasDevice: true
-    });
+      lastSeen: new Date().toISOString(),
+      batteryLevel: null
+    };
+    
+    deviceStatus.set(deviceId, deviceInfo);
+    
+    console.log('ESP32 Device Registration:', deviceInfo);
 
     res.json({ 
       success: true, 
@@ -102,7 +99,7 @@ app.post('/api/esp32/register', async (req, res) => {
   }
 });
 
-// ESP32 send vital signs data
+// ESP32 send vital signs data (simplified for development)
 app.post('/api/esp32/vitals', async (req, res) => {
   try {
     const { 
@@ -121,43 +118,30 @@ app.post('/api/esp32/vitals', async (req, res) => {
       return res.status(400).json({ error: 'Device ID is required' });
     }
 
-    // Verify device exists and get patient ID
-    const deviceRef = db.collection('esp32_devices').doc(deviceId);
-    const deviceDoc = await deviceRef.get();
-    
-    if (!deviceDoc.exists) {
-      return res.status(404).json({ error: 'ESP32 device not registered' });
+    // Update device status with latest data
+    if (deviceStatus.has(deviceId)) {
+      const deviceInfo = deviceStatus.get(deviceId);
+      deviceInfo.lastSeen = new Date().toISOString();
+      deviceInfo.batteryLevel = batteryLevel || deviceInfo.batteryLevel;
+      deviceStatus.set(deviceId, deviceInfo);
     }
 
-    const deviceData = deviceDoc.data();
-    const patientId = deviceData.patientId;
-
-    // Store vital signs data
-    const vitalsRef = db.collection('vital_signs').doc();
-    await vitalsRef.set({
+    // Log the vital signs data
+    console.log('Vital Signs Data Received:', {
       deviceId,
-      patientId,
-      timestamp: timestamp || admin.firestore.FieldValue.serverTimestamp(),
-      heartRate: heartRate || null,
-      temperature: temperature || null,
-      spo2: spo2 || null,
-      ecgData: ecgData || null, // Array of ECG readings
-      bloodPressure: bloodPressure || null, // {systolic, diastolic}
-      respiratoryRate: respiratoryRate || null,
-      batteryLevel: batteryLevel || null,
-      createdAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-
-    // Update device last seen
-    await deviceRef.update({
-      lastSeen: admin.firestore.FieldValue.serverTimestamp(),
-      batteryLevel: batteryLevel || deviceData.batteryLevel
+      timestamp: timestamp || new Date().toISOString(),
+      heartRate,
+      temperature,
+      spo2,
+      bloodPressure,
+      respiratoryRate,
+      batteryLevel,
+      ecgDataLength: ecgData ? ecgData.length : 0
     });
 
     res.json({ 
       success: true, 
-      message: 'Vital signs data stored successfully',
-      vitalsId: vitalsRef.id 
+      message: 'Vital signs data received successfully'
     });
   } catch (error) {
     console.error('Vital signs storage error:', error);
@@ -268,35 +252,45 @@ app.get('/api/vitals/:patientId/latest', verifyFirebaseIdToken, async (req, res)
   }
 });
 
-// Get ESP32 device status
-app.get('/api/esp32/status/:deviceId', verifyFirebaseIdToken, async (req, res) => {
+// Get ESP32 device status (real-time)
+app.get('/api/esp32/status/:deviceId', async (req, res) => {
   try {
     const { deviceId } = req.params;
 
-    const deviceRef = db.collection('esp32_devices').doc(deviceId);
-    const deviceDoc = await deviceRef.get();
-    
-    if (!deviceDoc.exists) {
-      return res.status(404).json({ error: 'ESP32 device not found' });
+    // Get real device status from memory
+    if (!deviceStatus.has(deviceId)) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'ESP32 device not found. Please register the device first.',
+        device: null
+      });
     }
 
-    const deviceData = deviceDoc.data();
+    const deviceInfo = deviceStatus.get(deviceId);
     
-    // Check if device is online (last seen within 5 minutes)
-    const lastSeen = deviceData.lastSeen?.toDate?.() || new Date(0);
-    const isOnline = (Date.now() - lastSeen.getTime()) < 5 * 60 * 1000; // 5 minutes
+    // Check if device is online (last seen within 2 minutes)
+    const lastSeen = new Date(deviceInfo.lastSeen);
+    const now = new Date();
+    const timeDiff = (now.getTime() - lastSeen.getTime()) / 1000; // seconds
+    const isOnline = timeDiff < 120; // 2 minutes
+
+    const realDeviceStatus = {
+      ...deviceInfo,
+      isOnline: isOnline,
+      timeSinceLastSeen: Math.round(timeDiff) // seconds since last seen
+    };
 
     res.json({
       success: true,
-      device: {
-        ...deviceData,
-        lastSeen: lastSeen,
-        isOnline
-      }
+      device: realDeviceStatus
     });
   } catch (error) {
     console.error('Get device status error:', error);
-    res.status(500).json({ error: 'Failed to get device status' });
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to get device status: ' + error.message,
+      device: null
+    });
   }
 });
 
