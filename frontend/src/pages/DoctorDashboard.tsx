@@ -20,6 +20,7 @@ import {
   Mail
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import VitalSignsMonitor from "@/components/VitalSignsMonitor";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
 const DoctorDashboard = () => {
@@ -179,6 +180,9 @@ const DoctorDashboard = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* ESP32 Vital Signs Monitoring */}
+      <VitalSignsMonitor patientId={patient.id.toString()} patientName={patient.name} />
 
       {/* SHAP Chart Placeholder */}
       <Card className="medical-card">

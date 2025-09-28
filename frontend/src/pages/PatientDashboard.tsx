@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
+import ESP32DevicePairing from "@/components/ESP32DevicePairing";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useCallback } from "react";
 
@@ -236,6 +237,9 @@ function PatientDashboardContentComponent({
           </CardContent>
         </Card>
       )}
+
+      {/* ESP32 Device Pairing */}
+      <ESP32DevicePairing patientId="1" patientName={personalDetails.fullName || "Patient"} />
 
       {/* Upload New Data Section */}
       <Card className="medical-card">
