@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signInWithRedirect } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut } from "firebase/auth";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
@@ -36,11 +36,15 @@ const Login = () => {
       const cred = await signInWithEmailAndPassword(auth, loginData.email, loginData.password);
       const idToken = await cred.user.getIdToken();
       localStorage.setItem('idToken', idToken);
-      // Fetch role from Firestore
-      const docRef = doc(db, 'doctors', cred.user.uid);
-      const docSnap = await getDoc(docRef);
-      const isDoctor = docSnap.exists();
-      const resolvedRole = isDoctor ? 'doctor' : 'patient';
+      // Fetch role from Firestore; block login if no profile exists
+      const doctorSnap = await getDoc(doc(db, 'doctors', cred.user.uid));
+      const patientSnap = await getDoc(doc(db, 'patients', cred.user.uid));
+      if (!doctorSnap.exists() && !patientSnap.exists()) {
+        await signOut(auth);
+        alert('No profile found. Please register first.');
+        return;
+      }
+      const resolvedRole = doctorSnap.exists() ? 'doctor' : 'patient';
       localStorage.setItem('user', JSON.stringify({
         role: resolvedRole,
         email: loginData.email,
@@ -64,15 +68,9 @@ const Login = () => {
       const cred = await createUserWithEmailAndPassword(auth, loginData.email, loginData.password);
       const idToken = await cred.user.getIdToken();
       localStorage.setItem('idToken', idToken);
-      await setDoc(doc(db, 'patients', cred.user.uid), {
-        uid: cred.user.uid,
-        role: 'patient',
-        name: loginData.email.split('@')[0],
-        email: loginData.email,
-        createdAt: serverTimestamp(),
-      }, { merge: true });
-      localStorage.setItem('user', JSON.stringify({ role: 'patient', email: loginData.email, name: loginData.email.split('@')[0] }));
-      navigate('/patient-dashboard');
+      // This function is not used on the Login page anymore. Keep here but do not auto-create profiles.
+      // If invoked directly, we still prevent auto-registration on the login view.
+      alert('Please use the Register page to create a new account.');
     } catch (err: any) {
       alert(err?.message || "Failed to register");
     }
@@ -95,24 +93,16 @@ const Login = () => {
         name: user.displayName || (user.email || '').split('@')[0]
       }));
 
-      // Ensure profile exists and determine role
-      const doctorsRef = doc(db, 'doctors', user.uid);
-      const ref = doctorsRef;
-      const snap = await getDoc(ref);
-      if (!snap.exists()) {
-        // default to patient profile
-        await setDoc(doc(db, 'patients', user.uid), {
-          uid: user.uid,
-          role: 'patient',
-          name: user.displayName || "",
-          email: user.email || "",
-          createdAt: serverTimestamp(),
-          provider: 'google'
-        }, { merge: true });
-        navigate('/patient-dashboard');
-      } else {
-        navigate('/doctor-dashboard');
+      // Determine role only; do NOT create any profile here
+      const doctorSnap2 = await getDoc(doc(db, 'doctors', user.uid));
+      const patientSnap2 = await getDoc(doc(db, 'patients', user.uid));
+      if (!doctorSnap2.exists() && !patientSnap2.exists()) {
+        await signOut(auth);
+        alert('No profile found for this Google account. Please register first.');
+        return;
       }
+      if (doctorSnap2.exists()) navigate('/doctor-dashboard');
+      else navigate('/patient-dashboard');
     } catch (err: any) {
       const code = err?.code || "";
       if (code === 'auth/popup-blocked') {
